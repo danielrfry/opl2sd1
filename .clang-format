@@ -1,0 +1,4 @@
+BasedOnStyle: WebKit
+IndentExternBlock: Indent
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
