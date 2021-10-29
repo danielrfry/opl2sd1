@@ -61,6 +61,6 @@ As the SD-1 has 16 voices and 16 tones, the translator simply reserves a tone fo
 
 The SD-1 uses a sample rate of 48000Hz, compared to the OPL3's sample rate of 49716Hz. As a result, by default the same block and frequency numbers produce a lower pitched note on the SD-1. The translator sets the global frequency multiplier register of the SD-1 to compensate for this difference.
 
-### 4. Envelope generator
+### 4. Envelope generator
 
 The OPL3 has an 'envelope type' parameter that determines whether a note is held at its sustain level while the key is on, or whether it transitions immediately from the decay to release phase. The SD-1 instead has a sustain rate parameter that determines the rate at which the level is reduced during the sustain phase. The translator sets the sustain rate either to the release rate or 0 according to the value of the envelope type parameter, to mimic the OPL behaviour.
