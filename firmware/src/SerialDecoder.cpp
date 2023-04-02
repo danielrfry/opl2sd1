@@ -5,10 +5,12 @@ bool SerialDecoder::putByte(uint8_t b)
     bool gotByte = false;
 
     if ((b & 1) == 0) {
-        this->sync = true;
-        this->buffer = 0;
-        this->bits = 0;
-    } else if (this->sync) {
+        this->csState = (b & 2) == 0;
+        if (!this->csState) {
+            this->buffer = 0;
+            this->bits = 0;
+        }
+    } else if (this->csState) {
         if (this->bits + 7 >= 8) {
             uint8_t shift = 8 - this->bits;
             this->outputByte = (this->buffer << shift) | (b >> (8 - shift));
@@ -28,4 +30,9 @@ bool SerialDecoder::putByte(uint8_t b)
 uint8_t SerialDecoder::getOutputByte() const
 {
     return this->outputByte;
+}
+
+bool SerialDecoder::getCSState() const
+{
+    return this->csState;
 }
