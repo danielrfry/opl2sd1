@@ -1,14 +1,15 @@
 #pragma once
 
+#include "IOPLDevice.h"
 #include "OPLRegisterSet.h"
 #include "SD1Device.h"
 #include "SD1Tone.h"
 
-class SD1OPLAdaptor {
+class SD1OPLAdaptor : public IOPLDevice {
 public:
     SD1OPLAdaptor(SD1Device* device);
-    void reset();
-    void write(uint16_t addr, uint8_t data);
+    virtual void reset();
+    virtual void write(uint16_t addr, uint8_t data);
     void update();
 
 private:
