@@ -15,6 +15,8 @@ add_executable(opl2sd1
     src/SD1OPLAdaptor.cpp
     src/SD1Tone.cpp
     src/SD1Utils.cpp
+    src/SerialDecoder.cpp
+    src/SerialProtocol.cpp
     src/usb_descriptors.c
 )
 

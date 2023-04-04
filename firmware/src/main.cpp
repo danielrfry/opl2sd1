@@ -1,5 +1,7 @@
 #include "SD1Device.h"
 #include "SD1OPLAdaptor.h"
+#include "SerialDecoder.h"
+#include "SerialProtocol.h"
 #include "config.h"
 
 #include <pico/stdlib.h>
@@ -22,25 +24,19 @@ int main()
 
     sd1.init();
 
-    uint8_t packet[3];
+    SerialDecoder decoder;
+    SerialProtocol protocol(&opl);
     uint8_t readPos = 0;
 
     while (true) {
         tud_task();
-        while (tud_cdc_available() > 0) {
-            tud_cdc_read(&packet[readPos], 1);
-            readPos++;
-
-            if (readPos == 3) {
-                readPos = 0;
-                if (packet[0] == 0xff) {
-                    if (packet[1] == 0x00 && packet[2] == 0x01) {
-                        opl.reset();
-                    }
-                } else if (packet[0] == 0x00 || packet[0] == 0x01) {
-                    uint16_t addr = (packet[0] << 8) | packet[1];
-                    uint8_t value = packet[2];
-                    opl.write(addr, value);
+        while (tud_cdc_available()) {
+            int b = tud_cdc_read_char();
+            if (b >= 0) {
+                bool gotByte = decoder.putByte(b);
+                protocol.setCS(decoder.getCSState());
+                if (gotByte) {
+                    protocol.putByte(decoder.getOutputByte());
                 }
             }
         }
