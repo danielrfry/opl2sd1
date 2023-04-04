@@ -8,7 +8,8 @@ This repository consists of:
 
 - `hardware/` - breadboard wiring diagram and schematic for a USB to SD-1 interface based on Raspberry Pi Pico
 - `firmware/` - firmware for the above device
-- `vgmplay/` - a Python program that plays back .VGM, .VGZ and .DRO files via a connected USB to SD-1 device
+
+The firmware supports the RetroWave OPL3 serial protocol, allowing it to be used with software such as the [RetroWave VGM player](https://github.com/SudoMaker/RetroWave), [https://www.scummvm.org/](ScummVM) and [https://dosbox-x.com/](DOSBox-X) that supports the RetroWave OPL3 hardware.
 
 ## Building the firmware
 
@@ -24,22 +25,11 @@ $ make
 
 ## Playing VGM files
 
-The included `vgmplay` program requires Python 3 and [pyserial](https://pypi.org/project/pyserial/). I have used it successfully on Linux and macOS, and it might also work on Windows.
-
-Install pyserial as follows:
+It's possible to use the [RetroWave_Player](https://github.com/SudoMaker/RetroWave) tool to play back OPL2/3 VGM files using this device. For example:
 
 ```
-$ pip3 install pyserial
+RetroWave_Player -t tty -d /dev/cu.usbmodem1234561 HITECH3.vgm
 ```
-
-To play a file:
-
-```
-$ cd vgmplay
-$ python3 vgmplay.py -d <serial port device> <path to .vgm/.vgz/.dro file>
-```
-
-`<serial port device>` will be, for example, `/dev/ttyACM0` on Linux or `/dev/tty.usbmodem1234561` on macOS.
 
 ## Notes on the OPL to SD-1 translation
 
