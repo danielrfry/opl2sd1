@@ -1,4 +1,5 @@
 #include "SD1Device.h"
+#include "config.h"
 
 #include <hardware/spi.h>
 #include <pico/stdlib.h>
@@ -9,9 +10,15 @@ void SD1Device::init()
     gpio_put(PIN_RST, 0);
     gpio_set_dir(PIN_RST, GPIO_OUT);
 
-    gpio_init(PIN_CS);
-    gpio_put(PIN_CS, 1);
-    gpio_set_dir(PIN_CS, GPIO_OUT);
+    gpio_init(PIN_CS_L);
+    gpio_put(PIN_CS_L, 1);
+    gpio_set_dir(PIN_CS_L, GPIO_OUT);
+
+#if OPLSD1_STEREO == 1
+    gpio_init(PIN_CS_R);
+    gpio_put(PIN_CS_R, 1);
+    gpio_set_dir(PIN_CS_R, GPIO_OUT);
+#endif
 
     spi_init(spi0, 8000000);
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
@@ -55,15 +62,25 @@ void SD1Device::reset()
     this->writeReg(0x18, 0x00);
 }
 
-void SD1Device::write(const uint8_t* data, const uint16_t len)
+void SD1Device::write(const uint8_t* data, const uint16_t len, SD1Channel channel)
 {
-    gpio_put(PIN_CS, 0);
+#if OPLSD1_STEREO == 1
+    gpio_put(PIN_CS_L, (channel & SD1Channel::LEFT) == SD1Channel::LEFT ? 0 : 1);
+    gpio_put(PIN_CS_R, (channel & SD1Channel::RIGHT) == SD1Channel::RIGHT ? 0 : 1);
+#else
+    gpio_put(PIN_CS_L, 0);
+#endif
+
     spi_write_blocking(spi0, data, len);
-    gpio_put(PIN_CS, 1);
+
+    gpio_put(PIN_CS_L, 1);
+#if OPLSD1_STEREO == 1
+    gpio_put(PIN_CS_R, 1);
+#endif
 }
 
-void SD1Device::writeReg(uint8_t addr, uint8_t data)
+void SD1Device::writeReg(uint8_t addr, uint8_t data, SD1Channel channel)
 {
     uint8_t buffer[2] = { addr, data };
-    this->write(&buffer[0], 2);
+    this->write(&buffer[0], 2, channel);
 }
