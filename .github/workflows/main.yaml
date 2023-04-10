@@ -1,0 +1,31 @@
+name: build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    name: Build firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out opl2sd1
+        uses: actions/checkout@v3
+        with:
+          path: opl2sd1
+      - name: Check out Pico SDK
+        uses: actions/checkout@v3
+        with:
+          repository: raspberrypi/pico-sdk
+          path: pico-sdk
+      - name: Install Pico SDK dependencies
+        run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Build firmware
+        run: |
+          mkdir -p opl2sd1/firmware/build
+          cd opl2sd1/firmware/build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make -j `nproc`
+        env:
+          PICO_SDK_PATH: ${{ env.GITHUB_WORKSPACE }}/pico-sdk
+      - name: Archive UF2 file
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware-uf2
+          path: opl2sd1/firmware/build/opl2sd1.uf2
