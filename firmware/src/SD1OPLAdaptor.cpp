@@ -16,12 +16,12 @@ void SD1OPLAdaptor::initState()
         this->changes[v] = true;
     }
     this->voiceAllocator.reset();
+    oplReg.reset();
 }
 
 void SD1OPLAdaptor::reset()
 {
     device->reset();
-    oplReg.reset();
     this->initState();
     for (uint8_t v = 0; v < 16; v++) {
         this->sd1SelectVoice(v);
