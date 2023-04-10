@@ -23,7 +23,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j `nproc`
         env:
-          PICO_SDK_PATH: ${{ env.GITHUB_WORKSPACE }}/pico-sdk
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
       - name: Archive UF2 file
         uses: actions/upload-artifact@v3
         with:
