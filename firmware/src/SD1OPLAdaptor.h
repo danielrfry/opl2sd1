@@ -4,6 +4,7 @@
 #include "OPLRegisterSet.h"
 #include "SD1Device.h"
 #include "SD1Tone.h"
+#include "VoiceAllocator.h"
 
 class SD1OPLAdaptor : public IOPLDevice {
 public:
@@ -17,9 +18,7 @@ private:
     OPLRegisterSet oplReg;
     SD1Tone tones[16];
     bool changes[24];
-    int8_t sd1Voices[24];
-    int8_t oplVoices[16];
-    uint8_t nextSD1Voice;
+    VoiceAllocator voiceAllocator;
 
     void initState();
     void sd1WriteTones(int8_t maxTone);
@@ -30,6 +29,5 @@ private:
     void handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData);
     void handleOPLConnSelChange(uint8_t oldData);
     void sd1SetKeyOn(bool on, uint8_t tone, bool egRst);
-    void allocateSD1Voice(uint8_t oplVoice);
-    void deallocateSD1Voice(uint8_t oplVoice);
+    void resetVoice(uint8_t oplVoice);
 };
