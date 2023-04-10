@@ -29,5 +29,6 @@ private:
     void handleOPLFNUMLChange(uint16_t addr, uint8_t oldData);
     void handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData);
     void sd1SetKeyOn(bool on, uint8_t tone, bool egRst);
-    bool allocateSD1Voice(uint8_t oplVoice);
+    void allocateSD1Voice(uint8_t oplVoice);
+    void deallocateSD1Voice(uint8_t oplVoice);
 };

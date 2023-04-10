@@ -152,10 +152,7 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
     if ((data & 0x20) != (oldData & 0x20)) {
         bool resetEGT = false;
         if (data & 0x20) {
-            resetEGT = this->allocateSD1Voice(oplVoice);
-            if (resetEGT) {
-                this->sd1SetKeyOn(false, this->sd1Voices[oplVoice], true);
-            }
+            this->allocateSD1Voice(oplVoice);
         }
 
         this->update();
@@ -180,24 +177,29 @@ void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
     this->device->writeReg(0x0f, data);
 }
 
-bool SD1OPLAdaptor::allocateSD1Voice(uint8_t oplVoice)
+void SD1OPLAdaptor::allocateSD1Voice(uint8_t oplVoice)
 {
     if (this->sd1Voices[oplVoice] < 0) {
         uint8_t newSD1Voice = this->nextSD1Voice;
         this->nextSD1Voice = (this->nextSD1Voice + 1) % 16;
 
         int8_t oldOplVoice = this->oplVoices[newSD1Voice];
+        if (oldOplVoice >= 0) {
+            this->deallocateSD1Voice(oldOplVoice);
+        }
+
         this->sd1Voices[oplVoice] = newSD1Voice;
         this->oplVoices[newSD1Voice] = oplVoice;
         this->changes[oplVoice] = true;
+    }
+}
 
-        if (oldOplVoice >= 0) {
-            this->sd1Voices[oldOplVoice] = -1;
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return false;
+void SD1OPLAdaptor::deallocateSD1Voice(uint8_t oplVoice)
+{
+    int8_t sd1Voice = this->sd1Voices[oplVoice];
+    if (sd1Voice >= 0) {
+        this->sd1SetKeyOn(false, sd1Voice, true);
+        this->sd1Voices[oplVoice] = -1;
+        this->oplVoices[sd1Voice] = -1;
     }
 }
