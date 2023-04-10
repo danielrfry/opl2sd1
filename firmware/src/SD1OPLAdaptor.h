@@ -28,6 +28,7 @@ private:
     void sd1SetPitch(uint8_t block, uint16_t fnum);
     void handleOPLFNUMLChange(uint16_t addr, uint8_t oldData);
     void handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData);
+    void handleOPLConnSelChange(uint8_t oldData);
     void sd1SetKeyOn(bool on, uint8_t tone, bool egRst);
     void allocateSD1Voice(uint8_t oplVoice);
     void deallocateSD1Voice(uint8_t oplVoice);

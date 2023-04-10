@@ -40,16 +40,20 @@ void SD1OPLAdaptor::write(uint16_t addr, uint8_t data)
     uint8_t oldData = this->oplReg.get(addr);
     this->oplReg.set(addr, data);
 
-    uint8_t oplVoice = OPL::getVoiceForRegister(addr, this->oplReg.get(0x104));
-    if (oplVoice < 24) {
-        this->changes[oplVoice] = true;
-    }
+    if (addr == 0x104) {
+        this->handleOPLConnSelChange(oldData);
+    } else {
+        uint8_t oplVoice = OPL::getVoiceForRegister(addr, this->oplReg.get(0x104));
+        if (oplVoice < 24) {
+            this->changes[oplVoice] = true;
+        }
 
-    uint8_t addrLSB = addr & 0xff;
-    if (addrLSB >= 0xa0 && addrLSB <= 0xa8) {
-        this->handleOPLFNUMLChange(addr, oldData);
-    } else if (addrLSB >= 0xb0 && addrLSB <= 0xb8) {
-        this->handleOPLKONBlockFNUMHChange(addr, oldData);
+        uint8_t addrLSB = addr & 0xff;
+        if (addrLSB >= 0xa0 && addrLSB <= 0xa8) {
+            this->handleOPLFNUMLChange(addr, oldData);
+        } else if (addrLSB >= 0xb0 && addrLSB <= 0xb8) {
+            this->handleOPLKONBlockFNUMHChange(addr, oldData);
+        }
     }
 }
 
@@ -161,6 +165,28 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
         if (sd1Voice >= 0) {
             this->sd1SelectVoice(sd1Voice);
             this->sd1SetKeyOn((data & 0x20) != 0, sd1Voice, false);
+        }
+    }
+}
+
+void SD1OPLAdaptor::handleOPLConnSelChange(uint8_t oldData)
+{
+    uint8_t data = this->oplReg.get(0x104);
+    if (data == oldData)
+        return;
+
+    for (uint8_t b = 0; b < 6; b++) {
+        uint8_t mask = 1 << b;
+        if ((data & mask) && !(oldData & mask)) {
+            // Channel was 2-op, now 4-op. Deallocate 2-op channels
+            uint8_t ch2Op[2];
+            OPL::get2OpChannelsFor4OpChannel(b, &ch2Op[0]);
+            this->deallocateSD1Voice(ch2Op[0]);
+            this->deallocateSD1Voice(ch2Op[1]);
+        }
+        if (!(data & mask) && (oldData & mask)) {
+            // Channel was 4-op, now 2-op. Deallocate 4-op channel
+            this->deallocateSD1Voice(b + 18);
         }
     }
 }
