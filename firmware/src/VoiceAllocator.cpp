@@ -22,10 +22,13 @@ void VoiceAllocator::reset()
     }
 }
 
-int8_t VoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice, bool allocate)
+int8_t VoiceAllocator::allocateSD1Voice(uint8_t oplVoice)
 {
     int8_t sd1Voice = this->sd1Voices[oplVoice];
-    if (sd1Voice >= 0 || !allocate) {
+    if (sd1Voice >= 0) {
+        this->keyOffQueue.removeAt(sd1Voice);
+        this->keyOnQueue.removeAt(sd1Voice);
+        this->keyOnQueue.pushBack(sd1Voice);
         return sd1Voice;
     }
 
@@ -47,6 +50,11 @@ int8_t VoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice, bool allocate)
     return sd1Voice;
 }
 
+int8_t VoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice)
+{
+    return this->sd1Voices[oplVoice];
+}
+
 int8_t VoiceAllocator::getOPLVoiceForSD1Voice(uint8_t sd1Voice)
 {
     return this->oplVoices[sd1Voice];
@@ -56,8 +64,9 @@ void VoiceAllocator::setVoiceKeyOff(uint8_t oplVoice)
 {
     int8_t sd1Voice = this->sd1Voices[oplVoice];
     if (sd1Voice >= 0) {
-        this->keyOnQueue.remove(sd1Voice);
-        this->keyOffQueue.pushBack(sd1Voice);
+        if (this->keyOnQueue.remove(sd1Voice)) {
+            this->keyOffQueue.pushBack(sd1Voice);
+        }
     }
 }
 

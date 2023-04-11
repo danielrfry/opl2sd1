@@ -65,14 +65,28 @@ public:
         this->size--;
     }
 
-    void remove(uint8_t v)
+    bool remove(uint8_t v)
     {
         for (int i = 0; i < this->size; i++) {
             if (this->contents[i] == v) {
                 this->removeAt(i);
-                return;
+                return true;
             }
         }
+        return false;
+    }
+
+    int8_t operator[](int index) const
+    {
+        if (index < 0 || index >= this->size) {
+            return -1;
+        }
+        return this->contents[index];
+    }
+
+    int getSize() const
+    {
+        return this->size;
     }
 
 private:

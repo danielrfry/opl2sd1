@@ -8,7 +8,8 @@ class VoiceAllocator {
 public:
     VoiceAllocator();
     void reset();
-    int8_t getSD1VoiceForOPLVoice(uint8_t oplVoice, bool allocate = false);
+    int8_t allocateSD1Voice(uint8_t oplVoice);
+    int8_t getSD1VoiceForOPLVoice(uint8_t oplVoice);
     int8_t getOPLVoiceForSD1Voice(uint8_t sd1Voice);
     void setVoiceKeyOff(uint8_t oplVoice);
     void releaseVoice(uint8_t oplVoice);
