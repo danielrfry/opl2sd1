@@ -154,10 +154,8 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
         bool newKeyOn = (data & 0x20) != 0;
         int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
         if (newKeyOn) {
-            if (sd1Voice < 0) {
-                sd1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
-                this->changes[oplVoice] = true;
-            }
+            sd1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
+            this->changes[oplVoice] = true;
         } else {
             this->voiceAllocator.setVoiceKeyOff(oplVoice);
         }
