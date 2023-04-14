@@ -145,16 +145,23 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
     uint16_t offset = addr - 0xb0;
     uint8_t oplVoice = OPL::getVoiceForChannelRegOffset(offset, this->oplReg.get(0x104));
     uint8_t data = this->oplReg.get(addr);
+
     if ((data & 0x1f) != (oldData & 0x1f)) {
+        // Pitch changed
         this->changes[oplVoice] = true;
     }
 
-    if ((data & 0x20) != (oldData & 0x20)) {
-        bool resetEGT = false;
-        bool newKeyOn = (data & 0x20) != 0;
+    bool newKeyOn = (data & 0x20) != 0;
+    bool oldKeyOn = (oldData & 0x20) != 0;
+
+    if (newKeyOn != oldKeyOn) {
         int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+        bool resetEGT = false;
         if (newKeyOn) {
-            sd1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
+            int8_t newSD1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
+            // Reset the envelope generator if the voice assignment changed
+            resetEGT = newSD1Voice != sd1Voice;
+            sd1Voice = newSD1Voice;
             this->changes[oplVoice] = true;
         } else {
             this->voiceAllocator.setVoiceKeyOff(oplVoice);
@@ -164,6 +171,9 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
 
         if (sd1Voice >= 0) {
             this->sd1SelectVoice(sd1Voice);
+            if (resetEGT) {
+                this->sd1SetKeyOn(false, sd1Voice, true);
+            }
             this->sd1SetKeyOn((data & 0x20) != 0, sd1Voice, false);
         }
     }
