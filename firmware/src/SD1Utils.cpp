@@ -26,7 +26,22 @@ void SD1::convertOPLTone(OPLTone& oplTone, SD1Tone& sd1Tone)
     }
 
     if (oplTone.is4Op()) {
-        sd1Tone.setALG(oplTone.getCNT() + 4);
+        uint8_t sd1Alg;
+        switch (oplTone.getCNT()) {
+        case 2:
+            sd1Alg = 5;
+            break;
+        case 1:
+            sd1Alg = 6;
+            break;
+        case 3:
+            sd1Alg = 7;
+            break;
+        default:
+            sd1Alg = 4;
+            break;
+        }
+        sd1Tone.setALG(sd1Alg);
     } else {
         sd1Tone.setALG(oplTone.getCNT());
     }

@@ -23,6 +23,7 @@ int main()
     init_levelshift();
 
     sd1.init();
+    opl.reset();
 
     SerialDecoder decoder;
     SerialProtocol protocol(&opl);

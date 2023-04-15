@@ -5,27 +5,23 @@
 #include <algorithm>
 #include <pico/stdlib.h>
 
-SD1OPLAdaptor::SD1OPLAdaptor(SD1Device* device) : device(device), oplReg(), tones(), changes()
+SD1OPLAdaptor::SD1OPLAdaptor(SD1Device* device) : device(device), oplReg(), tones(), changes(), voiceAllocator()
 {
     this->initState();
 }
 
 void SD1OPLAdaptor::initState()
 {
-    for (uint8_t v = 0; v < 16; v++) {
-        this->oplVoices[v] = -1;
-    }
     for (uint8_t v = 0; v < 24; v++) {
-        this->sd1Voices[v] = -1;
         this->changes[v] = true;
     }
-    this->nextSD1Voice = 0;
+    this->voiceAllocator.reset();
+    oplReg.reset();
 }
 
 void SD1OPLAdaptor::reset()
 {
     device->reset();
-    oplReg.reset();
     this->initState();
     for (uint8_t v = 0; v < 16; v++) {
         this->sd1SelectVoice(v);
@@ -40,16 +36,20 @@ void SD1OPLAdaptor::write(uint16_t addr, uint8_t data)
     uint8_t oldData = this->oplReg.get(addr);
     this->oplReg.set(addr, data);
 
-    uint8_t oplVoice = OPL::getVoiceForRegister(addr, this->oplReg.get(0x104));
-    if (oplVoice < 24) {
-        this->changes[oplVoice] = true;
-    }
+    if (addr == 0x104) {
+        this->handleOPLConnSelChange(oldData);
+    } else {
+        uint8_t oplVoice = OPL::getVoiceForRegister(addr, this->oplReg.get(0x104));
+        if (oplVoice < 24) {
+            this->changes[oplVoice] = true;
+        }
 
-    uint8_t addrLSB = addr & 0xff;
-    if (addrLSB >= 0xa0 && addrLSB <= 0xa8) {
-        this->handleOPLFNUMLChange(addr, oldData);
-    } else if (addrLSB >= 0xb0 && addrLSB <= 0xb8) {
-        this->handleOPLKONBlockFNUMHChange(addr, oldData);
+        uint8_t addrLSB = addr & 0xff;
+        if (addrLSB >= 0xa0 && addrLSB <= 0xa8) {
+            this->handleOPLFNUMLChange(addr, oldData);
+        } else if (addrLSB >= 0xb0 && addrLSB <= 0xb8) {
+            this->handleOPLKONBlockFNUMHChange(addr, oldData);
+        }
     }
 }
 
@@ -57,7 +57,7 @@ void SD1OPLAdaptor::update()
 {
     int8_t lastChangedTone = -1;
     for (uint8_t v = 0; v < 16; v++) {
-        int8_t oplVoice = this->oplVoices[v];
+        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(v);
         if (oplVoice >= 0 && this->changes[oplVoice]) {
             OPLTone oplTone;
             OPL::readTone(this->oplReg, oplVoice, oplTone);
@@ -70,7 +70,7 @@ void SD1OPLAdaptor::update()
 
     // Update pitch
     for (uint8_t v = 0; v < 16; v++) {
-        int8_t oplVoice = this->oplVoices[v];
+        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(v);
         if (oplVoice >= 0 && this->changes[oplVoice]) {
             uint8_t block;
             uint16_t fnum;
@@ -145,25 +145,58 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
     uint16_t offset = addr - 0xb0;
     uint8_t oplVoice = OPL::getVoiceForChannelRegOffset(offset, this->oplReg.get(0x104));
     uint8_t data = this->oplReg.get(addr);
+
     if ((data & 0x1f) != (oldData & 0x1f)) {
+        // Pitch changed
         this->changes[oplVoice] = true;
     }
 
-    if ((data & 0x20) != (oldData & 0x20)) {
+    bool newKeyOn = (data & 0x20) != 0;
+    bool oldKeyOn = (oldData & 0x20) != 0;
+
+    if (newKeyOn != oldKeyOn) {
+        int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
         bool resetEGT = false;
-        if (data & 0x20) {
-            resetEGT = this->allocateSD1Voice(oplVoice);
-            if (resetEGT) {
-                this->sd1SetKeyOn(false, this->sd1Voices[oplVoice], true);
-            }
+        if (newKeyOn) {
+            int8_t newSD1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
+            // Reset the envelope generator if the voice assignment changed
+            resetEGT = newSD1Voice != sd1Voice;
+            sd1Voice = newSD1Voice;
+            this->changes[oplVoice] = true;
+        } else {
+            this->voiceAllocator.setVoiceKeyOff(oplVoice);
         }
 
         this->update();
 
-        int8_t sd1Voice = this->sd1Voices[oplVoice];
         if (sd1Voice >= 0) {
             this->sd1SelectVoice(sd1Voice);
+            if (resetEGT) {
+                this->sd1SetKeyOn(false, sd1Voice, true);
+            }
             this->sd1SetKeyOn((data & 0x20) != 0, sd1Voice, false);
+        }
+    }
+}
+
+void SD1OPLAdaptor::handleOPLConnSelChange(uint8_t oldData)
+{
+    uint8_t data = this->oplReg.get(0x104);
+    if (data == oldData)
+        return;
+
+    for (uint8_t b = 0; b < 6; b++) {
+        uint8_t mask = 1 << b;
+        if ((data & mask) && !(oldData & mask)) {
+            // Channel was 2-op, now 4-op. Deallocate 2-op channels
+            uint8_t ch2Op[2];
+            OPL::get2OpChannelsFor4OpChannel(b, &ch2Op[0]);
+            this->resetVoice(ch2Op[0]);
+            this->resetVoice(ch2Op[1]);
+        }
+        if (!(data & mask) && (oldData & mask)) {
+            // Channel was 4-op, now 2-op. Deallocate 4-op channel
+            this->resetVoice(b + 18);
         }
     }
 }
@@ -180,24 +213,12 @@ void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
     this->device->writeReg(0x0f, data);
 }
 
-bool SD1OPLAdaptor::allocateSD1Voice(uint8_t oplVoice)
+void SD1OPLAdaptor::resetVoice(uint8_t oplVoice)
 {
-    if (this->sd1Voices[oplVoice] < 0) {
-        uint8_t newSD1Voice = this->nextSD1Voice;
-        this->nextSD1Voice = (this->nextSD1Voice + 1) % 16;
-
-        int8_t oldOplVoice = this->oplVoices[newSD1Voice];
-        this->sd1Voices[oplVoice] = newSD1Voice;
-        this->oplVoices[newSD1Voice] = oplVoice;
-        this->changes[oplVoice] = true;
-
-        if (oldOplVoice >= 0) {
-            this->sd1Voices[oldOplVoice] = -1;
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return false;
+    int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+    if (sd1Voice >= 0) {
+        this->sd1SelectVoice(sd1Voice);
+        this->sd1SetKeyOn(false, sd1Voice, true);
+        this->voiceAllocator.releaseVoice(oplVoice);
     }
 }

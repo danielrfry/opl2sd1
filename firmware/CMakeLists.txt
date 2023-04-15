@@ -18,6 +18,7 @@ add_executable(opl2sd1
     src/SerialDecoder.cpp
     src/SerialProtocol.cpp
     src/usb_descriptors.c
+    src/VoiceAllocator.cpp
 )
 
 pico_add_extra_outputs(opl2sd1)
