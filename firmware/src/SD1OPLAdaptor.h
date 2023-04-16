@@ -28,6 +28,11 @@ private:
     void handleOPLFNUMLChange(uint16_t addr, uint8_t oldData);
     void handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData);
     void handleOPLConnSelChange(uint8_t oldData);
-    void sd1SetKeyOn(bool on, uint8_t tone, bool egRst, bool mute = false, SD1Channel channel = SD1Channel::BOTH);
+    void handleOPLOutputChannelsChange(uint8_t oplVoice);
+    bool getOPL3Mode();
+    void handleOPL3ModeChange();
+    uint8_t getOPLOutputChannels(uint8_t oplVoice);
+    void sd1SetOutputChannels(uint8_t channels);
+    void sd1SetKeyOn(bool on, uint8_t tone, bool egRst);
     void resetVoice(uint8_t oplVoice);
 };
