@@ -201,7 +201,7 @@ void SD1OPLAdaptor::handleOPLConnSelChange(uint8_t oldData)
     }
 }
 
-void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
+void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst, bool mute, SD1Channel channel)
 {
     uint8_t data = tone;
     if (on) {
@@ -210,7 +210,10 @@ void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
     if (egRst) {
         data |= 0x10;
     }
-    this->device->writeReg(0x0f, data);
+    if (mute) {
+        data |= 0x20;
+    }
+    this->device->writeReg(0x0f, data, channel);
 }
 
 void SD1OPLAdaptor::resetVoice(uint8_t oplVoice)
@@ -218,7 +221,7 @@ void SD1OPLAdaptor::resetVoice(uint8_t oplVoice)
     int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
     if (sd1Voice >= 0) {
         this->sd1SelectVoice(sd1Voice);
-        this->sd1SetKeyOn(false, sd1Voice, true);
+        this->sd1SetKeyOn(false, sd1Voice, true, true);
         this->voiceAllocator.releaseVoice(oplVoice);
     }
 }
