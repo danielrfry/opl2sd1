@@ -64,18 +64,22 @@ void SD1Device::reset()
 
 void SD1Device::write(const uint8_t* data, const uint16_t len, SD1Channel channel)
 {
+    bool enableL = (channel & SD1Channel::LEFT) == SD1Channel::LEFT;
+    bool enableR = (channel & SD1Channel::RIGHT) == SD1Channel::RIGHT;
+
 #if OPL2SD1_STEREO == 1
-    gpio_put(PIN_CS_L, (channel & SD1Channel::LEFT) == SD1Channel::LEFT ? 0 : 1);
-    gpio_put(PIN_CS_R, (channel & SD1Channel::RIGHT) == SD1Channel::RIGHT ? 0 : 1);
+    constexpr uint32_t BIT_CS_L = 1 << PIN_CS_L;
+    constexpr uint32_t BIT_CS_R = 1 << PIN_CS_R;
+    gpio_put_masked(BIT_CS_L | BIT_CS_R, (enableL ? 0 : BIT_CS_L) | (enableR ? 0 : BIT_CS_R));
 #else
-    gpio_put(PIN_CS_L, 0);
+    gpio_put(PIN_CS_L, (enableL | enableR) ? 0 : 1);
 #endif
 
     spi_write_blocking(spi0, data, len);
 
     gpio_put(PIN_CS_L, 1);
 #if OPL2SD1_STEREO == 1
-    gpio_put(PIN_CS_R, 1);
+    gpio_put_masked(BIT_CS_L | BIT_CS_R, BIT_CS_L | BIT_CS_R);
 #endif
 }
 
