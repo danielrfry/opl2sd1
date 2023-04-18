@@ -19,14 +19,19 @@ jobs:
         run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
       - name: Build firmware
         run: |
-          mkdir -p opl2sd1/firmware/build
-          cd opl2sd1/firmware/build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make -j `nproc`
+          cmake -B build_mono -DCMAKE_BUILD_TYPE=Release
+          make -C build_mono -j `nproc`
+          cmake -B build_stereo -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_STEREO=ON
+          make -C build_mono -j `nproc`
         env:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
-      - name: Archive UF2 file
+      - name: Archive UF2 file for mono firmware
         uses: actions/upload-artifact@v3
         with:
-          name: firmware-uf2
-          path: opl2sd1/firmware/build/opl2sd1.uf2
+          name: firmware-uf2-mono
+          path: opl2sd1/firmware/build_mono/opl2sd1.uf2
+      - name: Archive UF2 file for stereo firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware-uf2-stereo
+          path: opl2sd1/firmware/build_stereo/opl2sd1.uf2
