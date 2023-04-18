@@ -232,6 +232,7 @@ void SD1OPLAdaptor::handleOPL3ModeChange()
 
 uint8_t SD1OPLAdaptor::getOPLOutputChannels(uint8_t oplVoice)
 {
+#if OPL2SD1_STEREO == 1
     if (this->getOPL3Mode()) {
         uint16_t regOffsets[2];
         uint8_t numOffsets;
@@ -240,6 +241,9 @@ uint8_t SD1OPLAdaptor::getOPLOutputChannels(uint8_t oplVoice)
     } else {
         return 3;
     }
+#else
+    return 3;
+#endif
 }
 
 void SD1OPLAdaptor::sd1SetOutputChannels(uint8_t channels)
