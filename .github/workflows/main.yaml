@@ -19,6 +19,7 @@ jobs:
         run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
       - name: Build firmware
         run: |
+          cd firmware
           cmake -B build_mono -DCMAKE_BUILD_TYPE=Release
           make -C build_mono -j `nproc`
           cmake -B build_stereo -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_STEREO=ON
