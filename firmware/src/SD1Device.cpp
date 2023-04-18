@@ -14,7 +14,7 @@ void SD1Device::init()
     gpio_put(PIN_CS_L, 1);
     gpio_set_dir(PIN_CS_L, GPIO_OUT);
 
-#if OPLSD1_STEREO == 1
+#if OPL2SD1_STEREO == 1
     gpio_init(PIN_CS_R);
     gpio_put(PIN_CS_R, 1);
     gpio_set_dir(PIN_CS_R, GPIO_OUT);
@@ -64,7 +64,7 @@ void SD1Device::reset()
 
 void SD1Device::write(const uint8_t* data, const uint16_t len, SD1Channel channel)
 {
-#if OPLSD1_STEREO == 1
+#if OPL2SD1_STEREO == 1
     gpio_put(PIN_CS_L, (channel & SD1Channel::LEFT) == SD1Channel::LEFT ? 0 : 1);
     gpio_put(PIN_CS_R, (channel & SD1Channel::RIGHT) == SD1Channel::RIGHT ? 0 : 1);
 #else
@@ -74,7 +74,7 @@ void SD1Device::write(const uint8_t* data, const uint16_t len, SD1Channel channe
     spi_write_blocking(spi0, data, len);
 
     gpio_put(PIN_CS_L, 1);
-#if OPLSD1_STEREO == 1
+#if OPL2SD1_STEREO == 1
     gpio_put(PIN_CS_R, 1);
 #endif
 }
