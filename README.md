@@ -29,6 +29,6 @@ It's possible to use the [RetroWave_Player](https://github.com/SudoMaker/RetroWa
 RetroWave_Player -t tty -d /dev/cu.usbmodem1234561 HITECH3.vgm
 ```
 
-## More information
+## More information
 
 - [Notes on the OPL to SD-1 translation](doc/translation_notes.md)
