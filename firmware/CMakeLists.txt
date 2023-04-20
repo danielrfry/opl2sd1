@@ -4,6 +4,8 @@ include(pico_sdk_import.cmake)
 
 project(opl2sd1)
 
+option(OPL2SD1_STEREO "Enable stereo mode" OFF)
+
 pico_sdk_init()
 
 add_executable(opl2sd1
@@ -22,6 +24,10 @@ add_executable(opl2sd1
 )
 
 pico_add_extra_outputs(opl2sd1)
+
+if (OPL2SD1_STEREO)
+    target_compile_definitions(opl2sd1 PUBLIC OPL2SD1_STEREO=1)
+endif()
 
 target_include_directories(opl2sd1 PRIVATE src)
 

@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <pico/stdlib.h>
 
+#define SD1_VOICE_ON_VOLUME 0x3c
+
 SD1OPLAdaptor::SD1OPLAdaptor(SD1Device* device) : device(device), oplReg(), tones(), changes(), voiceAllocator()
 {
     this->initState();
@@ -25,7 +27,7 @@ void SD1OPLAdaptor::reset()
     this->initState();
     for (uint8_t v = 0; v < 16; v++) {
         this->sd1SelectVoice(v);
-        this->device->writeReg(0x0c, 0x3c);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME);
         this->device->writeReg(0x12, 0x08);
         this->device->writeReg(0x13, 0x24);
     }
@@ -38,17 +40,22 @@ void SD1OPLAdaptor::write(uint16_t addr, uint8_t data)
 
     if (addr == 0x104) {
         this->handleOPLConnSelChange(oldData);
+    } else if (addr == 0x105) {
+        if (data != oldData) {
+            this->handleOPL3ModeChange();
+        }
     } else {
         uint8_t oplVoice = OPL::getVoiceForRegister(addr, this->oplReg.get(0x104));
-        if (oplVoice < 24) {
-            this->changes[oplVoice] = true;
-        }
 
         uint8_t addrLSB = addr & 0xff;
         if (addrLSB >= 0xa0 && addrLSB <= 0xa8) {
             this->handleOPLFNUMLChange(addr, oldData);
         } else if (addrLSB >= 0xb0 && addrLSB <= 0xb8) {
             this->handleOPLKONBlockFNUMHChange(addr, oldData);
+        } else if (addrLSB >= 0xc0 && addrLSB <= 0xc8) {
+            this->handleOPLOutputChannelsChange(oplVoice);
+        } else if (oplVoice < 24) {
+            this->changes[oplVoice] = data != oldData;
         }
     }
 }
@@ -156,11 +163,11 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
 
     if (newKeyOn != oldKeyOn) {
         int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
-        bool resetEGT = false;
+        bool initSD1Voice = false;
         if (newKeyOn) {
             int8_t newSD1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
-            // Reset the envelope generator if the voice assignment changed
-            resetEGT = newSD1Voice != sd1Voice;
+            // Initialise voice parameters if the assignment changed
+            initSD1Voice = newSD1Voice != sd1Voice;
             sd1Voice = newSD1Voice;
             this->changes[oplVoice] = true;
         } else {
@@ -171,8 +178,9 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
 
         if (sd1Voice >= 0) {
             this->sd1SelectVoice(sd1Voice);
-            if (resetEGT) {
+            if (initSD1Voice) {
                 this->sd1SetKeyOn(false, sd1Voice, true);
+                this->sd1SetOutputChannels(this->getOPLOutputChannels(oplVoice));
             }
             this->sd1SetKeyOn((data & 0x20) != 0, sd1Voice, false);
         }
@@ -198,6 +206,64 @@ void SD1OPLAdaptor::handleOPLConnSelChange(uint8_t oldData)
             // Channel was 4-op, now 2-op. Deallocate 4-op channel
             this->resetVoice(b + 18);
         }
+    }
+}
+
+void SD1OPLAdaptor::handleOPLOutputChannelsChange(uint8_t oplVoice)
+{
+    int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+    if (sd1Voice >= 0) {
+        this->sd1SelectVoice(sd1Voice);
+        this->sd1SetOutputChannels(this->getOPLOutputChannels(oplVoice));
+    }
+}
+
+bool SD1OPLAdaptor::getOPL3Mode()
+{
+    return (this->oplReg.get(0x105) & 0x01) != 0;
+}
+
+void SD1OPLAdaptor::handleOPL3ModeChange()
+{
+    for (uint8_t v = 0; v < 24; v++) {
+        this->handleOPLOutputChannelsChange(v);
+    }
+}
+
+uint8_t SD1OPLAdaptor::getOPLOutputChannels(uint8_t oplVoice)
+{
+    if (this->getOPL3Mode()) {
+        uint16_t regOffsets[2];
+        uint8_t numOffsets;
+        OPL::getChannelRegOffsetsForVoice(oplVoice, &regOffsets[0], numOffsets);
+        uint8_t enabledChannels = (this->oplReg.get(0xc0 + regOffsets[0]) & 0x30) >> 4;
+#if OPL2SD1_STEREO == 1
+        return enabledChannels;
+#else
+        return enabledChannels == 0 ? 0 : 3;
+#endif
+    } else {
+        return 3;
+    }
+}
+
+void SD1OPLAdaptor::sd1SetOutputChannels(uint8_t channels)
+{
+    switch (channels) {
+    case 0:
+        this->device->writeReg(0x0c, 0x00, SD1Channel::BOTH);
+        break;
+    case 1:
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, 0x00, SD1Channel::RIGHT);
+        break;
+    case 2:
+        this->device->writeReg(0x0c, 0x00, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::RIGHT);
+        break;
+    case 3:
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::BOTH);
+        break;
     }
 }
 
