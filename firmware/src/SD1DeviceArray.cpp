@@ -62,11 +62,11 @@ void SD1DeviceArray::reset()
     this->writeReg(0x18, 0x00);
 }
 
-void SD1DeviceArray::write(const uint8_t* data, const uint16_t len, int8_t stackIndex, SD1Channel channel)
+void SD1DeviceArray::write(const uint8_t* data, const uint16_t len, int8_t bank, SD1Channel channel)
 {
     uint32_t csMask = 0;
     for (uint8_t i = 0; i < this->config->numDevices; i++) {
-        if (stackIndex == -1 || this->config->devices[i].stackIndex == stackIndex) {
+        if (bank == -1 || this->config->devices[i].bank == bank) {
             if (channel == SD1Channel::ALL || channel == this->config->devices[i].channel) {
                 csMask |= 1 << this->config->devices[i].pinCS;
             }
@@ -78,8 +78,8 @@ void SD1DeviceArray::write(const uint8_t* data, const uint16_t len, int8_t stack
     gpio_put_masked(csMask, csMask);
 }
 
-void SD1DeviceArray::writeReg(uint8_t addr, uint8_t data, int8_t stackIndex, SD1Channel channel)
+void SD1DeviceArray::writeReg(uint8_t addr, uint8_t data, int8_t bank, SD1Channel channel)
 {
     uint8_t buffer[2] = { addr, data };
-    this->write(&buffer[0], 2, stackIndex, channel);
+    this->write(&buffer[0], 2, bank, channel);
 }

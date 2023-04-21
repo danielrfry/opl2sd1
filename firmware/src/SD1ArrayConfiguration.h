@@ -12,12 +12,13 @@ enum class SD1Channel : uint8_t {
 class SD1DeviceConfiguration {
 public:
     uint8_t pinCS;
-    uint8_t stackIndex;
+    uint8_t bank;
     SD1Channel channel;
 };
 
 class SD1ArrayConfiguration {
 public:
     uint8_t numDevices;
+    uint8_t numBanks;
     const SD1DeviceConfiguration* devices;
 };
