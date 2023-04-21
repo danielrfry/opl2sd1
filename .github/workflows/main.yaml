@@ -23,6 +23,8 @@ jobs:
           make -C build_mono -j `nproc`
           cmake -B build_stereo -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_STEREO=ON
           make -C build_stereo -j `nproc`
+          cmake -B build_quad -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_QUAD=ON
+          make -C build_quad -j `nproc`
         working-directory: ./opl2sd1/firmware
         env:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
