@@ -17,6 +17,7 @@ void SD1OPLAdaptor::initState()
     for (uint8_t v = 0; v < 24; v++) {
         this->changes[v] = true;
     }
+    this->activeBank = 0;
     this->voiceAllocator.reset();
     oplReg.reset();
 }
@@ -128,13 +129,14 @@ void SD1OPLAdaptor::oplGetBlockFNum(uint8_t oplVoice, uint8_t& block, uint16_t& 
 
 void SD1OPLAdaptor::sd1SelectVoice(uint8_t voice)
 {
-    this->device->writeReg(0x0b, voice);
+    this->activeBank = voice / 16;
+    this->device->writeReg(0x0b, voice, this->activeBank);
 }
 
 void SD1OPLAdaptor::sd1SetPitch(uint8_t block, uint16_t fnum)
 {
-    this->device->writeReg(0x0d, ((fnum & 0x380) >> 4) | (block & 0x07));
-    this->device->writeReg(0x0e, fnum & 0x7f);
+    this->device->writeReg(0x0d, ((fnum & 0x380) >> 4) | (block & 0x07), this->activeBank);
+    this->device->writeReg(0x0e, fnum & 0x7f, this->activeBank);
 }
 
 void SD1OPLAdaptor::handleOPLFNUMLChange(uint16_t addr, uint8_t oldData)
@@ -251,20 +253,20 @@ void SD1OPLAdaptor::sd1SetOutputChannels(uint8_t channels)
 {
     switch (channels) {
     case 0: // None
-        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::ALL);
+        this->device->writeReg(0x0c, 0x00, this->activeBank, SD1Channel::ALL);
         break;
     case 1: // Left
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::LEFT);
-        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::RIGHT);
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::BOTH);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, 0x00, this->activeBank, SD1Channel::RIGHT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank, SD1Channel::BOTH);
         break;
     case 2: // Right
-        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::LEFT);
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::RIGHT);
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::BOTH);
+        this->device->writeReg(0x0c, 0x00, this->activeBank, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank, SD1Channel::RIGHT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank, SD1Channel::BOTH);
         break;
     case 3: // Both
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::ALL);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank, SD1Channel::ALL);
         break;
     }
 }
@@ -278,7 +280,7 @@ void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
     if (egRst) {
         data |= 0x10;
     }
-    this->device->writeReg(0x0f, data);
+    this->device->writeReg(0x0f, data, this->activeBank);
 }
 
 void SD1OPLAdaptor::resetVoice(uint8_t oplVoice)

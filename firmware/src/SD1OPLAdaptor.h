@@ -19,6 +19,7 @@ private:
     SD1Tone tones[16];
     bool changes[24];
     DefaultVoiceAllocator voiceAllocator;
+    uint8_t activeBank;
 
     void initState();
     void sd1WriteTones(int8_t maxTone);

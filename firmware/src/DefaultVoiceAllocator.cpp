@@ -52,11 +52,17 @@ int8_t DefaultVoiceAllocator::allocateSD1Voice(uint8_t oplVoice)
 
 int8_t DefaultVoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice)
 {
+    if (oplVoice >= 24) {
+        return -1;
+    }
     return this->sd1Voices[oplVoice];
 }
 
 int8_t DefaultVoiceAllocator::getOPLVoiceForSD1Voice(uint8_t sd1Voice)
 {
+    if (sd1Voice >= 16) {
+        return -1;
+    }
     return this->oplVoices[sd1Voice];
 }
 
