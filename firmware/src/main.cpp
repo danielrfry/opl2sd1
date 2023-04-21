@@ -1,4 +1,4 @@
-#include "SD1Device.h"
+#include "SD1DeviceArray.h"
 #include "SD1OPLAdaptor.h"
 #include "SerialDecoder.h"
 #include "SerialProtocol.h"
@@ -7,7 +7,7 @@
 #include <pico/stdlib.h>
 #include <tusb.h>
 
-SD1Device sd1;
+SD1DeviceArray sd1(&SD1_ARRAY_CONFIG);
 SD1OPLAdaptor opl(&sd1);
 
 void init_levelshift()

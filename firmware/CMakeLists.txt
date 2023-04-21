@@ -10,12 +10,13 @@ option(OPL2SD1_QUAD "Enable quad SD-1 mode" OFF)
 pico_sdk_init()
 
 add_executable(opl2sd1
+    src/config.cpp
     src/main.cpp
     src/DefaultVoiceAllocator.cpp
     src/OPLRegisterSet.cpp
     src/OPLTone.cpp
     src/OPLUtils.cpp
-    src/SD1Device.cpp
+    src/SD1DeviceArray.cpp
     src/SD1OPLAdaptor.cpp
     src/SD1Tone.cpp
     src/SD1Utils.cpp

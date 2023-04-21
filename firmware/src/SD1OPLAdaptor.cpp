@@ -7,7 +7,7 @@
 
 #define SD1_VOICE_ON_VOLUME 0x3c
 
-SD1OPLAdaptor::SD1OPLAdaptor(SD1Device* device) : device(device), oplReg(), tones(), changes(), voiceAllocator()
+SD1OPLAdaptor::SD1OPLAdaptor(SD1DeviceArray* device) : device(device), oplReg(), tones(), changes(), voiceAllocator()
 {
     this->initState();
 }
@@ -250,19 +250,21 @@ uint8_t SD1OPLAdaptor::getOPLOutputChannels(uint8_t oplVoice)
 void SD1OPLAdaptor::sd1SetOutputChannels(uint8_t channels)
 {
     switch (channels) {
-    case 0:
-        this->device->writeReg(0x0c, 0x00, SD1Channel::BOTH);
+    case 0: // None
+        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::ALL);
         break;
-    case 1:
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::LEFT);
-        this->device->writeReg(0x0c, 0x00, SD1Channel::RIGHT);
+    case 1: // Left
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::RIGHT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::BOTH);
         break;
-    case 2:
-        this->device->writeReg(0x0c, 0x00, SD1Channel::LEFT);
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::RIGHT);
+    case 2: // Right
+        this->device->writeReg(0x0c, 0x00, 0, SD1Channel::LEFT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::RIGHT);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::BOTH);
         break;
-    case 3:
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, SD1Channel::BOTH);
+    case 3: // Both
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, 0, SD1Channel::ALL);
         break;
     }
 }

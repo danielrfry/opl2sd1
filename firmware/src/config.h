@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SD1ArrayConfiguration.h"
+
 #if !defined(OPL2SD1_QUAD)
 #define OPL2SD1_QUAD 0
 #endif
@@ -21,3 +23,5 @@
 
 #define PIN_RST 4
 #define PIN_OE 5
+
+extern const SD1ArrayConfiguration SD1_ARRAY_CONFIG;

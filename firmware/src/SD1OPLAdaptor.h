@@ -3,18 +3,18 @@
 #include "DefaultVoiceAllocator.h"
 #include "IOPLDevice.h"
 #include "OPLRegisterSet.h"
-#include "SD1Device.h"
+#include "SD1DeviceArray.h"
 #include "SD1Tone.h"
 
 class SD1OPLAdaptor : public IOPLDevice {
 public:
-    SD1OPLAdaptor(SD1Device* device);
+    SD1OPLAdaptor(SD1DeviceArray* device);
     virtual void reset();
     virtual void write(uint16_t addr, uint8_t data);
     void update();
 
 private:
-    SD1Device* device;
+    SD1DeviceArray* device;
     OPLRegisterSet oplReg;
     SD1Tone tones[16];
     bool changes[24];
