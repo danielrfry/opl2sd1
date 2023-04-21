@@ -1,11 +1,11 @@
-#include "VoiceAllocator.h"
+#include "DefaultVoiceAllocator.h"
 
-VoiceAllocator::VoiceAllocator()
+DefaultVoiceAllocator::DefaultVoiceAllocator()
 {
     this->reset();
 }
 
-void VoiceAllocator::reset()
+void DefaultVoiceAllocator::reset()
 {
     for (uint8_t i = 0; i < 16; i++) {
         this->oplVoices[i] = -1;
@@ -22,7 +22,7 @@ void VoiceAllocator::reset()
     }
 }
 
-int8_t VoiceAllocator::allocateSD1Voice(uint8_t oplVoice)
+int8_t DefaultVoiceAllocator::allocateSD1Voice(uint8_t oplVoice)
 {
     int8_t sd1Voice = this->sd1Voices[oplVoice];
     if (sd1Voice >= 0) {
@@ -50,17 +50,17 @@ int8_t VoiceAllocator::allocateSD1Voice(uint8_t oplVoice)
     return sd1Voice;
 }
 
-int8_t VoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice)
+int8_t DefaultVoiceAllocator::getSD1VoiceForOPLVoice(uint8_t oplVoice)
 {
     return this->sd1Voices[oplVoice];
 }
 
-int8_t VoiceAllocator::getOPLVoiceForSD1Voice(uint8_t sd1Voice)
+int8_t DefaultVoiceAllocator::getOPLVoiceForSD1Voice(uint8_t sd1Voice)
 {
     return this->oplVoices[sd1Voice];
 }
 
-void VoiceAllocator::setVoiceKeyOff(uint8_t oplVoice)
+void DefaultVoiceAllocator::setVoiceKeyOff(uint8_t oplVoice)
 {
     int8_t sd1Voice = this->sd1Voices[oplVoice];
     if (sd1Voice >= 0) {
@@ -70,7 +70,7 @@ void VoiceAllocator::setVoiceKeyOff(uint8_t oplVoice)
     }
 }
 
-void VoiceAllocator::releaseVoice(uint8_t oplVoice)
+void DefaultVoiceAllocator::releaseVoice(uint8_t oplVoice)
 {
     int8_t sd1Voice = this->sd1Voices[oplVoice];
     if (sd1Voice >= 0) {

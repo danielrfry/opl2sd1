@@ -1,10 +1,10 @@
 #pragma once
 
+#include "DefaultVoiceAllocator.h"
 #include "IOPLDevice.h"
 #include "OPLRegisterSet.h"
 #include "SD1Device.h"
 #include "SD1Tone.h"
-#include "VoiceAllocator.h"
 
 class SD1OPLAdaptor : public IOPLDevice {
 public:
@@ -18,7 +18,7 @@ private:
     OPLRegisterSet oplReg;
     SD1Tone tones[16];
     bool changes[24];
-    VoiceAllocator voiceAllocator;
+    DefaultVoiceAllocator voiceAllocator;
 
     void initState();
     void sd1WriteTones(int8_t maxTone);

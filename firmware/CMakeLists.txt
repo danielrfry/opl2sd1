@@ -11,6 +11,7 @@ pico_sdk_init()
 
 add_executable(opl2sd1
     src/main.cpp
+    src/DefaultVoiceAllocator.cpp
     src/OPLRegisterSet.cpp
     src/OPLTone.cpp
     src/OPLUtils.cpp
@@ -21,7 +22,6 @@ add_executable(opl2sd1
     src/SerialDecoder.cpp
     src/SerialProtocol.cpp
     src/usb_descriptors.c
-    src/VoiceAllocator.cpp
 )
 
 pico_add_extra_outputs(opl2sd1)
