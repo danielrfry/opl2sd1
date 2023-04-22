@@ -23,8 +23,8 @@ jobs:
           make -C build_mono -j `nproc`
           cmake -B build_stereo -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_STEREO=ON
           make -C build_stereo -j `nproc`
-          cmake -B build_quad -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_QUAD=ON
-          make -C build_quad -j `nproc`
+          cmake -B build_dual_stereo -DCMAKE_BUILD_TYPE=Release -DOPL2SD1_DUAL_STEREO=ON
+          make -C build_dual_stereo -j `nproc`
         working-directory: ./opl2sd1/firmware
         env:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
@@ -38,3 +38,8 @@ jobs:
         with:
           name: firmware-uf2-stereo
           path: opl2sd1/firmware/build_stereo/opl2sd1.uf2
+      - name: Archive UF2 file for dual stereo firmware
+        uses: actions/upload_artifact@v3
+        with:
+          name: firmware-uf2-dual-stereo
+          path: opl2sd1/firmware/build_dual_stereo/opl2sd1.uf2
