@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DefaultVoiceAllocator.h"
+#include "DualSD1VoiceAllocator.h"
 #include "IOPLDevice.h"
 #include "OPLRegisterSet.h"
 #include "SD1DeviceArray.h"
@@ -18,7 +19,9 @@ private:
     OPLRegisterSet oplReg;
     SD1Tone tones[24];
     bool changes[24];
-    DefaultVoiceAllocator voiceAllocator;
+    DefaultVoiceAllocator defaultVoiceAllocator;
+    DualSD1VoiceAllocator dualSD1VoiceAllocator;
+    IVoiceAllocator* voiceAllocator;
     uint8_t activeBank;
 
     void initState();

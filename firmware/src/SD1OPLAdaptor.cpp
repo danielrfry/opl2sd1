@@ -9,6 +9,11 @@
 
 SD1OPLAdaptor::SD1OPLAdaptor(SD1DeviceArray* device) : device(device), oplReg(), tones(), changes(), voiceAllocator()
 {
+    if (device->config->numBanks > 1) {
+        this->voiceAllocator = &this->dualSD1VoiceAllocator;
+    } else {
+        this->voiceAllocator = &this->defaultVoiceAllocator;
+    }
     this->initState();
 }
 
@@ -18,7 +23,7 @@ void SD1OPLAdaptor::initState()
         this->changes[v] = true;
     }
     this->activeBank = 0;
-    this->voiceAllocator.reset();
+    this->voiceAllocator->reset();
     oplReg.reset();
 }
 
@@ -80,7 +85,7 @@ void SD1OPLAdaptor::updateTones(uint8_t bank)
 
     for (uint8_t voiceOffset = 0; voiceOffset < numVoices; voiceOffset++) {
         uint8_t sd1Voice = voiceOffset + firstSD1Voice;
-        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(sd1Voice);
+        int8_t oplVoice = this->voiceAllocator->getOPLVoiceForSD1Voice(sd1Voice);
         if (oplVoice >= 0 && this->changes[oplVoice]) {
             OPLTone oplTone;
             OPL::readTone(this->oplReg, oplVoice, oplTone);
@@ -95,7 +100,7 @@ void SD1OPLAdaptor::updateTones(uint8_t bank)
 void SD1OPLAdaptor::updatePitch()
 {
     for (uint8_t v = 0; v < 24; v++) {
-        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(v);
+        int8_t oplVoice = this->voiceAllocator->getOPLVoiceForSD1Voice(v);
         if (oplVoice >= 0 && this->changes[oplVoice]) {
             uint8_t block;
             uint16_t fnum;
@@ -184,16 +189,16 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
     bool oldKeyOn = (oldData & 0x20) != 0;
 
     if (newKeyOn != oldKeyOn) {
-        int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+        int8_t sd1Voice = this->voiceAllocator->getSD1VoiceForOPLVoice(oplVoice);
         bool initSD1Voice = false;
         if (newKeyOn) {
-            int8_t newSD1Voice = this->voiceAllocator.allocateSD1Voice(oplVoice);
+            int8_t newSD1Voice = this->voiceAllocator->allocateSD1Voice(oplVoice);
             // Initialise voice parameters if the assignment changed
             initSD1Voice = newSD1Voice != sd1Voice;
             sd1Voice = newSD1Voice;
             this->changes[oplVoice] = true;
         } else {
-            this->voiceAllocator.setVoiceKeyOff(oplVoice);
+            this->voiceAllocator->setVoiceKeyOff(oplVoice);
         }
 
         this->update();
@@ -233,7 +238,7 @@ void SD1OPLAdaptor::handleOPLConnSelChange(uint8_t oldData)
 
 void SD1OPLAdaptor::handleOPLOutputChannelsChange(uint8_t oplVoice)
 {
-    int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+    int8_t sd1Voice = this->voiceAllocator->getSD1VoiceForOPLVoice(oplVoice);
     if (sd1Voice >= 0) {
         this->sd1SelectVoice(sd1Voice);
         this->sd1SetOutputChannels(this->getOPLOutputChannels(oplVoice));
@@ -305,10 +310,10 @@ void SD1OPLAdaptor::sd1SetKeyOn(bool on, uint8_t tone, bool egRst)
 
 void SD1OPLAdaptor::resetVoice(uint8_t oplVoice)
 {
-    int8_t sd1Voice = this->voiceAllocator.getSD1VoiceForOPLVoice(oplVoice);
+    int8_t sd1Voice = this->voiceAllocator->getSD1VoiceForOPLVoice(oplVoice);
     if (sd1Voice >= 0) {
         this->sd1SelectVoice(sd1Voice);
         this->sd1SetKeyOn(false, sd1Voice, true);
-        this->voiceAllocator.releaseVoice(oplVoice);
+        this->voiceAllocator->releaseVoice(oplVoice);
     }
 }
