@@ -13,6 +13,7 @@ add_executable(opl2sd1
     src/config.cpp
     src/main.cpp
     src/DefaultVoiceAllocator.cpp
+    src/DualSD1VoiceAllocator.cpp
     src/OPLRegisterSet.cpp
     src/OPLTone.cpp
     src/OPLUtils.cpp
