@@ -16,12 +16,13 @@ public:
 private:
     SD1DeviceArray* device;
     OPLRegisterSet oplReg;
-    SD1Tone tones[16];
+    SD1Tone tones[24];
     bool changes[24];
     DefaultVoiceAllocator voiceAllocator;
     uint8_t activeBank;
 
     void initState();
+    void updatePitch();
     void sd1WriteTones(int8_t maxTone);
     void oplGetBlockFNum(uint8_t oplVoice, uint8_t& block, uint16_t& fnum);
     void sd1SelectVoice(uint8_t voice);

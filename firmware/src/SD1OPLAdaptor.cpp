@@ -75,9 +75,16 @@ void SD1OPLAdaptor::update()
     }
 
     this->sd1WriteTones(lastChangedTone);
+    this->updatePitch();
 
-    // Update pitch
-    for (uint8_t v = 0; v < 16; v++) {
+    for (uint8_t v = 0; v < 24; v++) {
+        this->changes[v] = false;
+    }
+}
+
+void SD1OPLAdaptor::updatePitch()
+{
+    for (uint8_t v = 0; v < 24; v++) {
         int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(v);
         if (oplVoice >= 0 && this->changes[oplVoice]) {
             uint8_t block;
