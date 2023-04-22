@@ -39,7 +39,7 @@ jobs:
           name: firmware-uf2-stereo
           path: opl2sd1/firmware/build_stereo/opl2sd1.uf2
       - name: Archive UF2 file for dual stereo firmware
-        uses: actions/upload_artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: firmware-uf2-dual-stereo
           path: opl2sd1/firmware/build_dual_stereo/opl2sd1.uf2
