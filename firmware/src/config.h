@@ -12,6 +12,8 @@
 
 #define PIN_SCK 2
 #define PIN_MOSI 3
+#define PIN_RST 4
+#define PIN_OE 5
 
 // If stereo is not enabled, only PIN_CS_L is used
 #define PIN_CS_L 6
@@ -20,8 +22,5 @@
 // These pins are only used when dual stereo is enabled
 #define PIN_CS_L2 8
 #define PIN_CS_R2 9
-
-#define PIN_RST 4
-#define PIN_OE 5
 
 extern const SD1ArrayConfiguration SD1_ARRAY_CONFIG;
