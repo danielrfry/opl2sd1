@@ -74,7 +74,7 @@ void SD1OPLAdaptor::update()
         }
     }
 
-    this->sd1WriteTones(lastChangedTone);
+    this->sd1WriteTones(0, lastChangedTone + 1);
     this->updatePitch();
 
     for (uint8_t v = 0; v < 24; v++) {
@@ -97,18 +97,21 @@ void SD1OPLAdaptor::updatePitch()
     }
 }
 
-void SD1OPLAdaptor::sd1WriteTones(int8_t maxTone)
+void SD1OPLAdaptor::sd1WriteTones(uint8_t bank, uint8_t numTones)
 {
-    if (maxTone < 0)
+    if (numTones == 0)
         return;
+
+    uint8_t firstSD1Voice = bank == 0 ? 0 : 16;
 
     uint8_t buffer[486];
     buffer[0] = 0x07;
-    buffer[1] = 0x81 + maxTone;
+    buffer[1] = 0x80 + numTones;
     uint16_t offset = 2;
-    for (uint8_t toneIndex = 0; toneIndex <= maxTone; toneIndex++) {
+    for (uint8_t toneIndex = 0; toneIndex < numTones; toneIndex++) {
+        uint8_t sd1VoiceIndex = firstSD1Voice + toneIndex;
         SD1ToneData* toneData = (SD1ToneData*)((void*)&buffer[offset]);
-        *toneData = this->tones[toneIndex].toneData;
+        *toneData = this->tones[sd1VoiceIndex].toneData;
         offset += sizeof(SD1ToneData);
     }
     buffer[offset++] = 0x80;
@@ -116,10 +119,10 @@ void SD1OPLAdaptor::sd1WriteTones(int8_t maxTone)
     buffer[offset++] = 0x81;
     buffer[offset++] = 0x80;
 
-    this->device->writeReg(0x08, 0x16);
+    this->device->writeReg(0x08, 0x16, bank);
     sleep_us(7);
-    this->device->writeReg(0x08, 0x00);
-    this->device->write(&buffer[0], offset);
+    this->device->writeReg(0x08, 0x00, bank);
+    this->device->write(&buffer[0], offset, bank);
 }
 
 void SD1OPLAdaptor::oplGetBlockFNum(uint8_t oplVoice, uint8_t& block, uint16_t& fnum)
