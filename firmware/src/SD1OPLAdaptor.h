@@ -22,6 +22,7 @@ private:
     uint8_t activeBank;
 
     void initState();
+    void updateTones(uint8_t bank);
     void updatePitch();
     void sd1WriteTones(uint8_t bank, uint8_t numTones);
     void oplGetBlockFNum(uint8_t oplVoice, uint8_t& block, uint16_t& fnum);

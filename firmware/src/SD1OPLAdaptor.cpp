@@ -63,23 +63,33 @@ void SD1OPLAdaptor::write(uint16_t addr, uint8_t data)
 
 void SD1OPLAdaptor::update()
 {
-    int8_t lastChangedTone = -1;
-    for (uint8_t v = 0; v < 16; v++) {
-        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(v);
-        if (oplVoice >= 0 && this->changes[oplVoice]) {
-            OPLTone oplTone;
-            OPL::readTone(this->oplReg, oplVoice, oplTone);
-            SD1::convertOPLTone(oplTone, this->tones[v]);
-            lastChangedTone = std::max(lastChangedTone, (int8_t)v);
-        }
-    }
-
-    this->sd1WriteTones(0, lastChangedTone + 1);
+    this->updateTones(0);
+    this->updateTones(1);
     this->updatePitch();
 
     for (uint8_t v = 0; v < 24; v++) {
         this->changes[v] = false;
     }
+}
+
+void SD1OPLAdaptor::updateTones(uint8_t bank)
+{
+    uint8_t firstSD1Voice = bank == 0 ? 0 : 16;
+    uint8_t numVoices = bank == 0 ? 16 : 8;
+    uint8_t numTonesToWrite = 0;
+
+    for (uint8_t voiceOffset = 0; voiceOffset < numVoices; voiceOffset++) {
+        uint8_t sd1Voice = voiceOffset + firstSD1Voice;
+        int8_t oplVoice = this->voiceAllocator.getOPLVoiceForSD1Voice(sd1Voice);
+        if (oplVoice >= 0 && this->changes[oplVoice]) {
+            OPLTone oplTone;
+            OPL::readTone(this->oplReg, oplVoice, oplTone);
+            SD1::convertOPLTone(oplTone, this->tones[sd1Voice]);
+            numTonesToWrite = voiceOffset + 1;
+        }
+    }
+
+    this->sd1WriteTones(bank, numTonesToWrite);
 }
 
 void SD1OPLAdaptor::updatePitch()
