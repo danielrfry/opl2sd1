@@ -31,11 +31,11 @@ void SD1OPLAdaptor::reset()
 {
     device->reset();
     this->initState();
-    for (uint8_t v = 0; v < 16; v++) {
+    for (uint8_t v = 0; v < 24; v++) {
         this->sd1SelectVoice(v);
-        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME);
-        this->device->writeReg(0x12, 0x08);
-        this->device->writeReg(0x13, 0x24);
+        this->device->writeReg(0x0c, SD1_VOICE_ON_VOLUME, this->activeBank);
+        this->device->writeReg(0x12, 0x08, this->activeBank);
+        this->device->writeReg(0x13, 0x24, this->activeBank);
     }
 }
 
@@ -155,7 +155,7 @@ void SD1OPLAdaptor::oplGetBlockFNum(uint8_t oplVoice, uint8_t& block, uint16_t& 
 void SD1OPLAdaptor::sd1SelectVoice(uint8_t voice)
 {
     this->activeBank = voice / 16;
-    this->device->writeReg(0x0b, voice, this->activeBank);
+    this->device->writeReg(0x0b, voice % 16, this->activeBank);
 }
 
 void SD1OPLAdaptor::sd1SetPitch(uint8_t block, uint16_t fnum)
@@ -205,11 +205,12 @@ void SD1OPLAdaptor::handleOPLKONBlockFNUMHChange(uint16_t addr, uint8_t oldData)
 
         if (sd1Voice >= 0) {
             this->sd1SelectVoice(sd1Voice);
+            uint8_t toneIndex = sd1Voice % 16;
             if (initSD1Voice) {
-                this->sd1SetKeyOn(false, sd1Voice, true);
+                this->sd1SetKeyOn(false, toneIndex, true);
                 this->sd1SetOutputChannels(this->getOPLOutputChannels(oplVoice));
             }
-            this->sd1SetKeyOn((data & 0x20) != 0, sd1Voice, false);
+            this->sd1SetKeyOn((data & 0x20) != 0, toneIndex, false);
         }
     }
 }

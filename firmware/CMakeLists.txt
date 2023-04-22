@@ -5,7 +5,7 @@ include(pico_sdk_import.cmake)
 project(opl2sd1)
 
 option(OPL2SD1_STEREO "Enable stereo mode" OFF)
-option(OPL2SD1_QUAD "Enable quad SD-1 mode" OFF)
+option(OPL2SD1_DUAL_STEREO "Enable dual stereo mode" OFF)
 
 pico_sdk_init()
 
@@ -32,8 +32,8 @@ if (OPL2SD1_STEREO)
     target_compile_definitions(opl2sd1 PUBLIC OPL2SD1_STEREO=1)
 endif()
 
-if (OPL2SD1_QUAD)
-    target_compile_definitions(opl2sd1 PUBLIC OPL2SD1_QUAD=1)
+if (OPL2SD1_DUAL_STEREO)
+    target_compile_definitions(opl2sd1 PUBLIC OPL2SD1_DUAL_STEREO=1)
 endif()
 
 target_include_directories(opl2sd1 PRIVATE src)

@@ -1,6 +1,32 @@
 #include "config.h"
 
-#if OPL2SD1_STEREO == 1
+#if OPL2SD1_DUAL_STEREO == 1
+
+const SD1DeviceConfiguration SD1_DEVICE_CONFIGS[] = {
+    {
+        .pinCS = PIN_CS_L,
+        .bank = 0,
+        .channel = SD1Channel::LEFT,
+    },
+    {
+        .pinCS = PIN_CS_R,
+        .bank = 0,
+        .channel = SD1Channel::RIGHT,
+    },
+    {
+        .pinCS = PIN_CS_L2,
+        .bank = 1,
+        .channel = SD1Channel::LEFT,
+    },
+    {
+        .pinCS = PIN_CS_R2,
+        .bank = 1,
+        .channel = SD1Channel::RIGHT,
+    },
+};
+constexpr uint8_t SD1_NUM_BANKS = 2;
+
+#elif OPL2SD1_STEREO == 1
 
 const SD1DeviceConfiguration SD1_DEVICE_CONFIGS[] = {
     {
