@@ -265,7 +265,7 @@ uint8_t SD1OPLAdaptor::getOPLOutputChannels(uint8_t oplVoice)
         uint8_t numOffsets;
         OPL::getChannelRegOffsetsForVoice(oplVoice, &regOffsets[0], numOffsets);
         uint8_t enabledChannels = (this->oplReg.get(0xc0 + regOffsets[0]) & 0x30) >> 4;
-#if OPL2SD1_STEREO == 1
+#if OPL2SD1_STEREO == 1 || OPL2SD1_DUAL_STEREO == 1
         return enabledChannels;
 #else
         return enabledChannels == 0 ? 0 : 3;
