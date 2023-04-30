@@ -18,6 +18,10 @@ void SD1DeviceArray::init()
         gpio_init(this->config->devices[i].pinCS);
         gpio_put(this->config->devices[i].pinCS, 1);
         gpio_set_dir(this->config->devices[i].pinCS, GPIO_OUT);
+
+        gpio_init(this->config->devices[i].pinCSLED);
+        gpio_put(this->config->devices[i].pinCSLED, 1);
+        gpio_set_dir(this->config->devices[i].pinCSLED, GPIO_OUT);
     }
 
     spi_init(spi0, 8000000);
@@ -65,17 +69,21 @@ void SD1DeviceArray::reset()
 void SD1DeviceArray::write(const uint8_t* data, const uint16_t len, int8_t bank, SD1Channel channel)
 {
     uint32_t csMask = 0;
+    uint32_t ledMask = 0;
     for (uint8_t i = 0; i < this->config->numDevices; i++) {
         if (bank == -1 || this->config->devices[i].bank == bank) {
             if (channel == SD1Channel::ALL || channel == this->config->devices[i].channel) {
                 csMask |= 1 << this->config->devices[i].pinCS;
+                ledMask |= 1 << this->config->devices[i].pinCSLED;
             }
         }
     }
 
+    gpio_put_masked(ledMask, 0);
     gpio_put_masked(csMask, 0);
     spi_write_blocking(spi0, data, len);
     gpio_put_masked(csMask, csMask);
+    gpio_put_masked(ledMask, ledMask);
 }
 
 void SD1DeviceArray::writeReg(uint8_t addr, uint8_t data, int8_t bank, SD1Channel channel)

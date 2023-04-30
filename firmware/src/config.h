@@ -23,4 +23,9 @@
 #define PIN_CS_L2 8
 #define PIN_CS_R2 9
 
+#define PIN_LED_CS_L 10
+#define PIN_LED_CS_R 11
+#define PIN_LED_CS_L2 12
+#define PIN_LED_CS_R2 13
+
 extern const SD1ArrayConfiguration SD1_ARRAY_CONFIG;
